@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>マットの技ツリー</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style>
+/* Layout: 体育館のマット。青いマットの上に技のカードが学年順に並び、線で「次の技」につながる */
+:root {
+  --bg: #f3f6fa;
+  --surface: #ffffff;
+  --ink: #1b2a3a;
+  --muted: #5d6b7b;
+  --line: #d3dce6;
+  --mat: #2f62a8;
+  --mat-soft: #e3ecf8;
+  --done: #f2b632;
+  --done-ink: #4a3300;
+  --done-soft: #fff3d6;
+  --practice: #2e9d74;
+  --practice-soft: #e2f5ed;
+  --warn: #c2412d;
+  --warn-soft: #fdebe7;
+  --locked: #a9b4c0;
+  --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
+  --font-body: "BIZ UDPGothic", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121a24; --surface: #1b2633; --ink: #e8eef5; --muted: #9aa8b8; --line: #2e3c4d;
+    --mat: #7fa8e6; --mat-soft: #1f3150; --done: #f5c255; --done-ink: #2b1d00; --done-soft: #3a2f14;
+    --practice: #5cc9a0; --practice-soft: #163a2e; --warn: #f08a76; --warn-soft: #3d1f1a; --locked: #5b6878;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121a24; --surface: #1b2633; --ink: #e8eef5; --muted: #9aa8b8; --line: #2e3c4d;
+  --mat: #7fa8e6; --mat-soft: #1f3150; --done: #f5c255; --done-ink: #2b1d00; --done-soft: #3a2f14;
+  --practice: #5cc9a0; --practice-soft: #163a2e; --warn: #f08a76; --warn-soft: #3d1f1a; --locked: #5b6878;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.7;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.35; margin: 0; }
+rt { font-size: 0.5em; font-family: var(--font-body); font-weight: 400; color: var(--muted); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--mat); outline-offset: 2px; }
+
+header.top { padding-block: 24px 12px; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+header.top h1 { font-size: clamp(26px, 6vw, 36px); font-weight: 900; color: var(--mat); }
+header.top p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.meter { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; }
+.meter .bar { width: 140px; height: 12px; border-radius: 6px; background: var(--mat-soft); overflow: hidden; }
+.meter .bar i { display: block; height: 100%; background: var(--done); border-radius: 6px; transition: width .4s; }
+.meter b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.sync { font-size: 12px; color: var(--muted); font-family: var(--font-body); font-weight: 400; }
+
+.tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-block: 8px 16px; position: sticky; top: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 5; padding-top: 6px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.tabs button { border: 0; background: none; padding: 10px 14px; font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; cursor: pointer; }
+.tabs button[aria-selected="true"] { color: var(--mat); border-bottom-color: var(--mat); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 16px; height: 16px; border-radius: 5px; display: inline-block; border: 2px solid var(--line); background: var(--surface); }
+.legend .l-done { background: var(--done); border-color: var(--done); }
+.legend .l-prac { border-color: var(--practice); background: var(--practice-soft); }
+.legend .l-next { border-color: var(--mat); }
+.legend .l-lock { border-style: dashed; opacity: .6; }
+
+.tree-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 14px; background: var(--mat-soft); padding: 12px 0; }
+.tree { position: relative; margin: 0 auto; }
+.tree svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.tree .edge { fill: none; stroke: var(--locked); stroke-width: 2; stroke-dasharray: 4 4; }
+.tree .edge.on { stroke: var(--mat); stroke-dasharray: none; stroke-width: 2.5; }
+.lane-head { position: absolute; top: 0; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--mat); letter-spacing: .04em; }
+.row-head { position: absolute; left: 6px; font-size: 11px; color: var(--muted); writing-mode: vertical-rl; letter-spacing: .1em; }
+.node {
+  position: absolute; width: 112px; min-height: 60px; padding: 6px 6px 5px; border-radius: 12px; cursor: pointer;
+  background: var(--surface); border: 2px solid var(--line); text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  transition: transform .15s, box-shadow .15s;
+}
+.node:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgb(0 0 0 / .12); }
+.node .nm { font-family: var(--font-display); font-weight: 700; font-size: 14px; line-height: 1.25; }
+.node .st { font-size: 10px; color: var(--muted); letter-spacing: .05em; }
+.node.next { border-color: var(--mat); }
+.node.practice { border-color: var(--practice); background: var(--practice-soft); }
+.node.done { border-color: var(--done); background: var(--done); color: var(--done-ink); }
+.node.done .st { color: var(--done-ink); }
+.node.locked { border-style: dashed; opacity: .62; }
+.node .badge { position: absolute; top: -9px; right: -7px; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 0 7px; line-height: 18px; }
+.node.done .badge { background: var(--ink); color: var(--bg); }
+.node.practice .badge { background: var(--practice); color: var(--surface); }
+.hint { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+
+.list { display: grid; gap: 10px; }
+.group-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-top: 14px; display: flex; gap: 10px; align-items: baseline; }
+.group-title small { font-family: var(--font-body); font-size: 12px; color: var(--muted); font-weight: 400; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; text-align: left; width: 100%; }
+.row:hover { border-color: var(--mat); }
+.row .nm { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+.row .sub { font-size: 13px; color: var(--muted); grid-column: 1; min-width: 0; }
+.chip { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; white-space: nowrap; border: 1px solid var(--line); color: var(--muted); }
+.chip.done { background: var(--done); color: var(--done-ink); border-color: var(--done); }
+.chip.practice { background: var(--practice-soft); color: var(--practice); border-color: var(--practice); }
+.chip.next { color: var(--mat); border-color: var(--mat); }
+.stars { color: var(--done); letter-spacing: 1px; font-size: 13px; }
+.stars .off { color: var(--line); }
+
+section.guide { margin-top: 28px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+.card h2 { font-size: 18px; margin-bottom: 8px; }
+.card ul { margin: 0; padding-left: 1.2em; }
+.card li + li { margin-top: 4px; }
+.card.safety { border-color: var(--warn); background: var(--warn-soft); }
+.card.safety h2 { color: var(--warn); }
+.card a { color: var(--mat); }
+
+/* 技の詳細 */
+dialog.sheet { border: 0; padding: 0; width: min(760px, 100%); max-height: 100%; height: 100%; margin: 0 0 0 auto; background: var(--bg); color: var(--ink); }
+@media (min-width: 800px) { dialog.sheet { height: 100%; border-left: 1px solid var(--line); } }
+dialog.sheet::backdrop { background: rgb(10 20 35 / .45); }
+.sheet-inner { padding: calc(env(safe-area-inset-top, 0px) + 12px) max(18px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 40px) max(18px, env(safe-area-inset-left, 0px)); display: grid; gap: 18px; }
+.sheet-bar { display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg); padding-block: 6px; z-index: 2; }
+.close { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 16px; cursor: pointer; font-weight: 700; }
+.d-head h2 { font-size: clamp(26px, 7vw, 34px); font-weight: 900; }
+.d-head .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 6px; font-size: 14px; color: var(--muted); }
+.d-head p.desc { margin: 10px 0 0; max-width: 62ch; }
+.state-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.state-pick button { border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 4px; font-family: var(--font-display); font-weight: 700; cursor: pointer; font-size: 15px; }
+.state-pick button[aria-pressed="true"][data-v="0"] { border-color: var(--muted); background: var(--line); }
+.state-pick button[aria-pressed="true"][data-v="1"] { border-color: var(--practice); background: var(--practice-soft); color: var(--practice); }
+.state-pick button[aria-pressed="true"][data-v="2"] { border-color: var(--done); background: var(--done); color: var(--done-ink); }
+.goal { background: var(--done-soft); border-radius: 12px; padding: 12px 14px; }
+.goal b { font-family: var(--font-display); }
+.d-sec h3 { font-size: 18px; margin-bottom: 8px; color: var(--mat); }
+.video-frame { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 12px; overflow: hidden; background: #000; }
+.video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.vids { display: grid; gap: 8px; margin-top: 8px; }
+.vid { display: flex; gap: 12px; align-items: center; text-decoration: none; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.vid:hover { border-color: var(--mat); }
+.vid .play { flex: none; width: 40px; height: 28px; border-radius: 8px; background: var(--warn); position: relative; }
+.vid .play::after { content: ""; position: absolute; left: 16px; top: 8px; border-left: 11px solid #fff; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+.vid .t { font-size: 14px; line-height: 1.45; min-width: 0; }
+.vid .t small { display: block; color: var(--muted); font-size: 12px; }
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: s; }
+ol.steps li { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+ol.steps label { display: contents; cursor: pointer; }
+ol.steps input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--practice); }
+ol.steps .stxt { min-width: 0; }
+ol.steps .stxt b { font-family: var(--font-display); }
+ol.steps .stxt b::before { counter-increment: s; content: "ステップ" counter(s) "　"; color: var(--muted); font-weight: 500; font-size: 12px; }
+ol.steps li.ok { border-color: var(--practice); }
+.two { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.two ul { margin: 0; padding-left: 1.2em; }
+.trouble { display: grid; gap: 8px; }
+.trouble div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.trouble b { display: block; font-family: var(--font-display); }
+.safety-box { background: var(--warn-soft); border: 1px solid var(--warn); border-radius: 12px; padding: 12px 14px; }
+.safety-box h3 { color: var(--warn); }
+.safety-box ul { margin: 0; padding-left: 1.2em; }
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.links button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: 14px; }
+.links button.done { background: var(--done); border-color: var(--done); color: var(--done-ink); }
+.links .lbl { font-size: 13px; color: var(--muted); align-self: center; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>マットの<ruby>技<rt>わざ</rt></ruby>ツリー</h1>
+      <p>幼稚園から小学6年生までのマット運動25技。できた技から次の技へ進もう。</p>
+    </div>
+    <div class="meter" aria-live="polite">
+      <span>できた</span><span class="bar"><i id="meterBar" style="width:0"></i></span><b id="meterNum">0/25</b>
+      <span class="sync" id="syncNote"></span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-tree" aria-selected="true" data-view="tree">スキルツリー</button>
+    <button role="tab" id="tab-list" aria-selected="false" data-view="list">難易度順</button>
+    <button role="tab" id="tab-guide" aria-selected="false" data-view="guide">安全と使い方</button>
+  </nav>
+
+  <div id="view-tree">
+    <div class="legend">
+      <span><i class="l-done"></i>できた</span>
+      <span><i class="l-prac"></i>練習中</span>
+      <span><i class="l-next"></i>挑戦できる</span>
+      <span><i class="l-lock"></i>前の技が先</span>
+    </div>
+    <div class="tree-scroll"><div class="tree" id="tree"></div></div>
+    <p class="hint">上ほどやさしく、下ほどむずかしい技です。線は「この技ができたら次はこれ」を表します。技をタップすると、動画と練習ステップが見られます。</p>
+  </div>
+
+  <div id="view-list" hidden><div class="list" id="list"></div></div>
+
+  <div id="view-guide" hidden>
+    <section class="guide" style="margin-top:0">
+      <div class="card safety">
+        <h2>練習の前に必ず</h2>
+        <ul>
+          <li>首・手首・足首・肩をよく回してから始めます。</li>
+          <li>マットはすき間なく敷き、ずれないか確認します。家では布団やマットレスを使い、家具や壁から離します。</li>
+          <li>回る方向や足を振る範囲に、人や物がないか見てから始めます。</li>
+          <li>はだしで行います（靴下はすべります）。髪どめ、ポケットの中身ははずします。</li>
+          <li>首・腰・手首が痛いときは、その日はやめます。</li>
+          <li>★4以上の技と「補助つき」と書いたステップは、大人か指導者がそばにいるときだけ行います。</li>
+          <li>疲れてくると失敗やけがが増えます。1つの技は5〜10回を目安に休けいします。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>このサイトの見かた</h2>
+        <ul>
+          <li><b>★の数</b>は難しさです（★1：幼児から ／ ★5：小学校高学年の発展技）。</li>
+          <li><b>学年の目安</b>は、学校の体育（学習指導要領の例示）と体操教室での一般的な順番をもとにした目安です。早い・遅いを気にする必要はありません。</li>
+          <li>技をタップして「練習中」「できた」を選ぶと、ツリーの色が変わります。できた技の次の技は青い枠になります。</li>
+          <li>練習ステップのチェックボックスは、できたステップに付けていきます。</li>
+          <li id="saveNote">記録はこの端末に保存されます。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>教えるときのコツ</h2>
+        <ul>
+          <li>1回の練習で直すことは1つだけにします。</li>
+          <li>「ひざをのばして」より「つま先ピン！」のように、体の場所と動きを短い言葉で伝えます。</li>
+          <li>できなかったときは、1つ前のステップに戻ってできた感覚で終わります。</li>
+          <li>坂道マット（マットの下に布団や丸めたマットを入れて坂にする）や重ねたマットの段差は、多くの回転技を楽にしてくれます。</li>
+          <li>他の子と比べず、昨日の自分と比べてほめます。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>動画について</h2>
+        <ul>
+          <li>動画は、体操教室・体育の先生・文部科学省などの解説系チャンネルからえらんでいます。</li>
+          <li>文部科学省の学年別まとめ動画：<a href="https://www.youtube.com/watch?v=YhC0svmi1-I" target="_blank" rel="noopener">低学年</a> ／ <a href="https://www.youtube.com/watch?v=I3lmo8pAvfI" target="_blank" rel="noopener">中学年</a> ／ <a href="https://www.youtube.com/watch?v=Nk-eQdGtL-8" target="_blank" rel="noopener">高学年</a></li>
+          <li id="videoNote">動画のボタンを押すとYouTubeが開きます。</li>
+          <li>動画が削除されて見られない場合があります。</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</div>
+
+<dialog class="sheet" id="sheet" aria-labelledby="dTitle"><div class="sheet-inner" id="sheetBody"></div></dialog>
+
+<script>
+// ===== 技データ =====
+// lane: 0 前まわり / 1 後ろまわり / 2 頭で逆さ / 3 手で逆さ / 4 横まわり / 5 そり・はね / 6 バランス
+const LANES = ["前まわり", "後ろまわり", "頭で逆さ", "手で逆さ", "横まわり", "そり・はね", "バランス"];
+const ROWS = ["幼児", "年長〜1年", "1〜3年", "3〜4年", "4〜6年", "5〜6年", "発展"];
+
+const SKILLS = [
+{ id: "maruta", name: "丸太転がり", kana: "まるたころがり", lane: 0, row: 0, stars: 1, grade: "年少〜", pre: [],
+  desc: "体をまっすぐ伸ばして、横にころころ転がります。回る感覚のいちばん最初の運動です。",
+  goal: "手と足をのばしたまま、マットの端から端までまっすぐ転がれる。",
+  steps: [
+    ["あおむけでバンザイ", "マットにあおむけに寝て、両手を頭の上にのばします。"],
+    ["大人が押して1回", "大人が腰を軽く押して、1回だけ転がります。"],
+    ["自分で1回", "自分の力で1回転がって、うつぶせで止まります。"],
+    ["続けて3回", "止まらずに3回転がります。"],
+    ["端から端まで", "マットの端から端まで、まっすぐ転がります。逆向きにもやってみます。"]],
+  tips: ["手と足をくっつけて「1本の丸太」になる", "おへそとつま先を同じタイミングで回す", "目はつぶらずに開けておく"],
+  coach: ["「丸太になれるかな？ピーン！」と声をかける", "曲がっていく子には、ゴール側に大人が立って目印になる", "横向きに寝た姿勢から始めると怖さが減る"],
+  trouble: [["ななめに進んでしまう", "手足ののび方が左右でちがいます。両手を合わせ、足首もくっつけます。"], ["目が回る", "2〜3回で休けいし、反対回りもします。"]],
+  safety: ["転がる先にぶつかる物がないか確認する", "マットを2枚つなげて、端から落ちないようにする"],
+  videos: [["YhC0svmi1-I", "小学校低学年体育 マットを使った運動遊び（文部科学省）"]] },
+
+{ id: "yurikago", name: "ゆりかご", kana: "ゆりかご", lane: 1, row: 0, stars: 1, grade: "年少〜", pre: [],
+  desc: "体をだんごのように丸めて、背中で前後にゆれます。前転と後転の両方の土台になります。",
+  goal: "ひざをかかえて前後に5回ゆれて、最後に手を使わずにしゃがんだ姿勢にもどれる。",
+  steps: [
+    ["体育すわりでかかえる", "体育すわりをして、ひざを両手でかかえます。"],
+    ["おへそを見る", "あごを引いて、おへそを見ます。背中が丸くなります。"],
+    ["後ろにころん", "後ろに倒れて、腰→背中→首のつけ根の順にマットにつけます。"],
+    ["前にもどる", "反動で前にもどり、お尻をつきます。"],
+    ["5回続けて止まる", "5回続けてゆれ、最後は足の裏でしゃがんで止まります。"],
+    ["手を耳の横に", "慣れたら手をはなし、耳の横で手のひらを上にしてゆれます（後転の手の形）。"]],
+  tips: ["背中をボールのように丸くする", "腰・背中・首の順にゆっくりつく", "もどるときは、かかとをお尻に引きよせる"],
+  coach: ["「おへそ見て、だんごむし！」と声をかける", "起き上がれない子は、前から両手を引いてあげる", "2人で手をつないで一緒にゆれると楽しく続く"],
+  trouble: [["背中がバタンと板のように倒れる", "あごが上がっています。ひざにおでこを近づけて丸くなります。"], ["起き上がれない", "足がのびています。かかとをお尻に引きつけます。最初は手を引いてあげます。"]],
+  safety: ["頭の後ろを打たないよう、必ずマットの上で行う", "後ろに人がいないか確認する"],
+  videos: [["kKlon5ftKWk", "できたよ！マット運動【前転の基本練習① ゆりかご】"], ["-Cg0uahM0p0", "【ゆりかご】体の使い方が分かる！前転・後転が上達する練習"]] },
+
+{ id: "kuma", name: "くまさん歩き", kana: "くまさんあるき", lane: 3, row: 0, stars: 1, grade: "年少〜", pre: [],
+  desc: "手と足だけで歩きます。腕で体を支える力と、お尻を高く上げる感覚が育ちます。逆立ちや側転の土台です。",
+  goal: "ひざをのばしてお尻を高くしたまま、マットの端から端まで歩ける。",
+  steps: [
+    ["よつんばいで歩く", "ひざをついたよつんばいで歩きます。"],
+    ["ひざを浮かせる", "ひざを床から浮かせて歩きます。"],
+    ["お尻を高く", "ひざをできるだけのばし、お尻を天井に向けて歩きます。"],
+    ["後ろ向きにも", "後ろ向きや横向きにも歩きます。"],
+    ["遊びにする", "コーンを回って往復したり、うさぎ跳びとリレーにしたりします。"]],
+  tips: ["手は指をパーに開いて、手のひら全体でつく", "目線は手と手の間の少し前", "後ろ足をまっすぐピンとのばす"],
+  coach: ["「くまさんになって、のっしのっし」と声をかける", "腕の力が弱い子は短い距離から始める", "回数より「お尻が高い」をほめる"],
+  trouble: [["ひざがすぐ床につく", "距離を短くし、手と足の間をせまくします。"], ["手首を痛がる", "手首回しをしてから、短い時間で行います。"]],
+  safety: ["手首の準備運動をしてから行う", "前の子とぶつからないよう間をあける"],
+  videos: [["Y3SfDtDuNkw", "くま歩き3つのポイント大公開！"], ["OzALaKCZBi0", "どうぶつ歩き① くま歩き"]] },
+
+{ id: "zenten", name: "前転", kana: "ぜんてん", lane: 0, row: 1, stars: 1, grade: "年中〜1年", pre: ["maruta", "yurikago"],
+  desc: "しゃがんだ姿勢から手をつき、頭の後ろからマットについて、前へ1回転して立ちます。",
+  goal: "まっすぐ回って、手をつかずに立ち上がれる。",
+  steps: [
+    ["丸くなる確認", "ゆりかごで、背中を丸くする感覚を思い出します。"],
+    ["坂道マットで回る", "マットの下に布団などを入れて坂を作り、高いほうから低いほうへ前転します。"],
+    ["手をついてお尻を高く", "肩幅に手をつき、お尻を高く上げて、おへそを見ます。"],
+    ["頭の後ろからつく", "足でけって、頭のてっぺんではなく後ろ側からマットにつきます。"],
+    ["しゃがんで止まる", "ゆりかごのように起き上がって、しゃがんだ姿勢で止まります。"],
+    ["手をつかずに立つ", "手を前に出しながら、手をつかずに立ち上がります。"]],
+  tips: ["手は肩幅、指はパーで前向き", "あごを引いて、おへそを見る", "起きるときは、かかとをお尻に引きよせて手を前へ"],
+  coach: ["「おへそ見て、くるん、パッ！」と声をかける", "補助は横にしゃがみ、片手で首の後ろ、片手で太ももの裏を持って回す", "起き上がれない子は、前から両手を引いて立たせる"],
+  trouble: [["ななめに曲がる", "手の位置が左右でちがうか、片足でけっています。手を置く場所に目印をつけます。"], ["起き上がれない", "足がのびています。ひざをかかえるように引きつけます。坂道マットを使います。"], ["頭のてっぺんをつく", "あごを引いて、おへそを見ます。"]],
+  safety: ["頭のてっぺんから突っこまない（首を痛めます）", "回る先にマットが十分あるか確認する"],
+  videos: [["wdrQpMbdFdk", "できたよ！マット運動【前転のポイント】"], ["PtDl9xnJC0o", "【前転】正しい前転の教え方（池谷幸雄）"], ["JADaLVJoPNc", "前転から起き上がれない子の練習方法まとめ"]] },
+
+{ id: "kaeru", name: "かえるの足打ち", kana: "かえるのあしうち", lane: 3, row: 1, stars: 2, grade: "年長〜1年", pre: ["kuma"],
+  desc: "手で体を支えて両足を浮かせ、空中で足を打ち鳴らします。逆さになって腕で支える感覚の入り口です。",
+  goal: "お尻を肩より高く上げて、空中で2回以上足を打てる。",
+  steps: [
+    ["手をつく", "しゃがんで、肩幅に両手をつきます。"],
+    ["うさぎ跳び", "両足でけって、少しだけお尻を浮かせます。"],
+    ["高く浮かせる", "お尻を高く上げて、足を浮かせたまま一瞬止まります。"],
+    ["1回打つ", "浮いたときに、足を1回パチンと打ちます。"],
+    ["回数を増やす", "2回、3回と打てる回数を増やします。"]],
+  tips: ["ひじはピンとのばしたまま", "目線は手と手の間（おへそを見ない）", "肩が手の真上に来るように前に乗り出す"],
+  coach: ["「手は床にくっつき虫、足はパチン！」と声をかける", "打てた回数をみんなで数える", "怖がる子は、うさぎ跳びができただけで十分ほめる"],
+  trouble: [["ひじが曲がって頭から落ちそう", "すぐ中止します。腕立ての姿勢で体を支える練習から始めます。"], ["お尻が上がらない", "けりを強くします。重ねたマットに手をついて行うと楽になります。"]],
+  safety: ["顔の下にマットがあるか確認する", "ひじが曲がる子には無理させない"],
+  videos: [["w-JuYoFV5D4", "小学校体育器械運動の基本「カエルの足うち」"], ["R1yZlVIHBFM", "【マット運動】カエルの足うち｜おうちでできる体育"]] },
+
+{ id: "bridge", name: "ブリッジ", kana: "ブリッジ", lane: 5, row: 1, stars: 2, grade: "年長〜2年", pre: [],
+  desc: "あおむけから手と足で体を持ち上げ、おなかを天井に向けてそります。はねおき系の技の土台です。",
+  goal: "ひじとひざをのばして、5秒止まれる。",
+  steps: [
+    ["ひざを立てる", "あおむけでひざを立て、かかとをお尻に近づけます。"],
+    ["手を耳の横に", "手を耳の横につきます。指先は肩（足）のほうに向けます。"],
+    ["お尻だけ上げる", "肩をついたままお尻を持ち上げて5秒止まります（肩ブリッジ）。"],
+    ["頭のてっぺんまで", "手で押して、頭のてっぺんがマットにつくところまで上がります。"],
+    ["頭を浮かせる", "さらに手で押してひじをのばし、頭を浮かせます。"],
+    ["5秒キープ", "目線は手のほうを見て、5秒止まります。"]],
+  tips: ["手の指先は足のほうへ向ける", "手で床を押して、胸を手の上に出す", "足は肩幅、つま先はまっすぐ前"],
+  coach: ["「おへそを天井にとどけ！」と声をかける", "補助は腰の下にタオルを通して、両はしを持ち上げる", "体のやわらかさより「押す力」をほめる"],
+  trouble: [["頭が浮かない", "手の位置が遠いか、指先が外を向いています。手を肩の真横に近づけます。"], ["腰が痛い", "すぐやめます。胸と肩のストレッチを先に行います。"]],
+  safety: ["腰が痛いときはすぐ中止する", "長く続けない（5秒を数回）"],
+  videos: [["V2RP-aouXuw", "【体操教室】体操日本一がブリッジのやり方をわかりやすく説明"], ["87owQDF7BTE", "子供のためのブリッジ入門！ゼロから始めておうちでブリッジ"]] },
+
+{ id: "suihei", name: "片足水平バランス", kana: "かたあしすいへいバランス", lane: 6, row: 1, stars: 2, grade: "1〜2年", pre: [],
+  desc: "片足で立ち、上体を前に倒して、上げた足と一直線にして止まります。ひこうきのポーズです。",
+  goal: "体と上げた足が床と平行になったまま、5秒止まれる。",
+  steps: [
+    ["片足立ち10秒", "両手を横に広げて、片足で10秒立ちます。"],
+    ["足を後ろへ", "上げた足を、後ろに少し引きます。"],
+    ["シーソーのように", "上体を少しずつ前に倒し、同じだけ足を上げます。"],
+    ["ひこうきの形", "両手を横に広げて、ひこうきの形にします。"],
+    ["5秒キープ", "床と平行になったら5秒止まります。反対の足でも行います。"]],
+  tips: ["目線はマットの1点（1mくらい前）を見る", "軸足のひざはまっすぐ", "上げた足のつま先までピンとのばす"],
+  coach: ["「ひこうき、ぶーん、ピタッ！」と声をかける", "最初は壁や大人の手につかまってよい", "一緒に数を数えて、止まる時間をのばす"],
+  trouble: [["ぐらぐらする", "目線が動いています。見る場所を決めます。"], ["足が上がらない", "上体を倒すのと足を上げるのを同時にします。"]],
+  safety: ["周りにぶつかる物がない場所で行う", "転びそうなときに手をつける場所で行う"],
+  videos: [["DJREGAoPNsw", "おうちで挑戦！バランス感覚を育てる体操ポーズ紹介【水平＆Y字】"]] },
+
+{ id: "kouten", name: "後転", kana: "こうてん", lane: 1, row: 2, stars: 2, grade: "1〜3年", pre: ["yurikago"],
+  desc: "しゃがんだ姿勢から後ろに転がり、手でマットを押して後ろへ1回転します。",
+  goal: "まっすぐ回って、しゃがんだ姿勢で着地できる。首が痛くない。",
+  steps: [
+    ["ウサギの耳でゆりかご", "手を耳の横（手のひらを上、指は肩のほう）にしてゆりかごをします。"],
+    ["足を頭の先へ", "ゆりかごで、足先を頭の先のマットにつけます。"],
+    ["坂道マットで回る", "坂道マットの高いほうから低いほうへ、後ろに転がります。補助つき。"],
+    ["手で押して首をぬく", "頭の横で手でマットを押して、首をぬきます。"],
+    ["しゃがんで止まる", "足がマットについたら、しゃがんで止まります。"],
+    ["平らなマットで", "平らなマットで、ひとりで回ります。"]],
+  tips: ["手は耳の横で「ウサギの耳」", "背中を丸く、ひざとおでこを近づけたまま", "手でマットをグッと押すのと、足をつくのを同時に"],
+  coach: ["「ウサギの耳つくって、ころん、ぐっ！」と声をかける", "補助は横に立ち、腰を持ち上げて首の負担を軽くする", "坂道マットを使うと首が楽で怖くない"],
+  trouble: [["首の上で止まってもどってくる", "勢いと手の押しが足りません。坂道マットを使い、補助で腰を持ち上げます。"], ["横に倒れる", "首を横にして逃げています。左右の手で同時に押します。"], ["首が痛い", "中止します。補助つきで、手の押しを練習します。"]],
+  safety: ["首を痛めやすい技。痛いときはすぐやめる", "必ずやわらかいマットで、最初は補助つきで行う"],
+  videos: [["YhbMAiffk7E", "できたよ！マット運動【後転のポイント】"], ["9wC1xR_S-Z8", "できたよ！マット運動【後転の基本練習② 補助付き後転】"], ["qBYn3IMjHkc", "マットの後転（後ろ回り）のやり方・コツ（学校の授業で使えるフリー動画）"]] },
+
+{ id: "atama", name: "頭倒立", kana: "あたまとうりつ", lane: 2, row: 2, stars: 3, grade: "2〜4年", pre: ["zenten", "kaeru"],
+  desc: "両手とおでこの上の3点で三角形をつくり、逆さで止まります。三点倒立ともいいます。",
+  goal: "足をそろえて真上にのばし、3秒止まれる。",
+  steps: [
+    ["三角形をつくる", "正座から、両手（肩幅）と頭で三角形をつくります。頭が三角形の頂点です。"],
+    ["ひざをひじに乗せる", "ひざをひじの上に乗せて止まります（かえる三点倒立）。"],
+    ["足を浮かせる", "ひざを曲げたまま、足を床から浮かせます。"],
+    ["ゆっくりのばす", "ゆっくり足をのばして、天井に向けます。補助つき。"],
+    ["3秒止まる", "3秒止まり、ゆっくり足を下ろします。"]],
+  tips: ["頭は「おでこの少し上」をつく。てっぺんではない", "ひじは直角、わきをしめる", "三角形を小さくしすぎない"],
+  coach: ["「三角おにぎりをつくって！」と声をかける", "補助は横に立ち、太ももを両手で支える", "倒れそうなときは、あごを引いて前転で逃げる方法を先に教える"],
+  trouble: [["背中側に倒れる", "三角形が小さいか、頭が手と同じ線の上にあります。頭を前に出します。"], ["首が痛い", "頭に体重を乗せすぎています。手で床を押します。痛いときはすぐ中止します。"]],
+  safety: ["首に負担がかかる技。長く続けない", "倒れるときは前転で逃げる"],
+  videos: [["UZAWg3mqtXI", "マットの三点倒立（頭倒立）のやり方・コツ（学校の授業で使えるフリー動画）"], ["lm7gWj8IRQQ", "三点倒立で倒れる人へ！安定する4ステップ練習法"]] },
+
+{ id: "kabe", name: "壁倒立", kana: "かべとうりつ", lane: 3, row: 2, stars: 2, grade: "2〜3年", pre: ["kaeru"],
+  desc: "壁を使って逆さになり、腕で体を支えます。倒立のなかまの技すべての土台です。",
+  goal: "壁にかかとをつけて、ひじをのばしたまま10秒止まれる。",
+  steps: [
+    ["腕で支える", "くまさん歩きとかえるの足打ちで、腕で支える感覚に慣れます。"],
+    ["壁のぼり倒立", "壁に背を向けて手をつき、足で壁をのぼります。おなかが壁を向きます。"],
+    ["手を壁に近づける", "少しずつ手を壁に近づけ、体をまっすぐにして5秒止まります。"],
+    ["降り方の練習", "足を片方ずつ下ろして降ります。"],
+    ["けり上げ", "壁に向かって手をつき、片足ずつけり上げて、かかとを壁につけます。補助つき。"],
+    ["10秒キープ", "ひじをのばして10秒止まります。"]],
+  tips: ["手は肩幅、壁から手のひら1〜2枚分はなす", "目線は手と手の間", "おなかとお尻に力を入れて、体を1本の棒にする"],
+  coach: ["「手で床を押して、足は天井！」と声をかける", "けり上げの補助は横に立ち、上がってきた太ももを持つ", "壁のぼり倒立は、降り方を先に練習させる"],
+  trouble: [["足が上がらない", "けりが弱いか怖がっています。かえるの足打ちにもどるか、補助で足を持ちます。"], ["ひじが曲がる", "頭を打つ危険があります。すぐ降りて、腕立ての姿勢で支える練習をします。"], ["背中がそりすぎる", "おなかに力を入れ、目線を手の間にします。"]],
+  safety: ["頭の下にマットを敷く", "降り方（片足ずつ下ろす）を先に練習する"],
+  videos: [["EZsBstaklaQ", "倒立初心者が壁倒立ができるまでの練習法【10ステップで解説】"], ["pIna5OnTECo", "【壁倒立】どうしてもできない人向けの練習方法"]] },
+
+{ id: "kaikyakuZenten", name: "開脚前転", kana: "かいきゃくぜんてん", lane: 0, row: 2, stars: 3, grade: "3〜4年", pre: ["zenten"],
+  desc: "前転して、足がマットにつく直前に大きく開き、手で押して開脚のまま立ち上がります。",
+  goal: "ひざをのばしたまま、足を開いて立ち上がれる。",
+  steps: [
+    ["開脚ストレッチ", "長座で足を開き、股の間に手をついて体を前に倒します。"],
+    ["前転して開いてすわる", "前転して、足をのばしたまま開いてすわります。"],
+    ["段差を使う", "重ねたマットの上から下に向かって前転し、足を開いて立ちます。"],
+    ["補助つき", "着地のときに、補助者に腰を持ち上げてもらいます。"],
+    ["平らなマットで", "平らなマットで、ひとりで立ち上がります。"]],
+  tips: ["足を開くのは、かかとがマットにつく直前（早く開かない）", "ひざをのばして、かかとからつく", "手は股の近くにつき、かかとと同時に強く押す"],
+  coach: ["「くるん、パッと開いて、ぐーっと押す！」と声をかける", "補助は後ろから腰を持ち上げる", "回転のスピードが大事。お尻を高く上げてスタートさせる"],
+  trouble: [["立ち上がれない", "手の位置が遠いか、押しが弱いです。手を股の近くにつきます。段差を使います。"], ["ひざが曲がる", "開くのが早すぎます。つま先をのばすことを意識します。"]],
+  safety: ["首まわりの準備運動をする", "前にマットが十分あるか確認する"],
+  videos: [["_M4deuEAnFc", "できたよ！マット運動【開脚前転のポイント】"], ["LpB0K2Np9nw", "できたよ！マット運動【開脚前転の基本練習② 補助付き開脚前転】"], ["fqZuBNmXb40", "開脚前転のやり方！コツや練習方法を解説"]] },
+
+{ id: "tobiZenten", name: "跳び前転", kana: "とびぜんてん", lane: 0, row: 3, stars: 3, grade: "4〜6年", pre: ["zenten"],
+  desc: "両足でふみ切って少し宙に浮いてから、手をついて前転します。",
+  goal: "両足でふみ切り、ふんわり浮いてから、やわらかく前転できる。",
+  steps: [
+    ["遠くに手をつく前転", "いつもより少し遠くに手をついて前転します。"],
+    ["その場ジャンプから", "その場で両足ジャンプしてから前転します。"],
+    ["助走から", "2〜3歩の助走から、両足でふみ切って前転します。"],
+    ["ゴムひもをこえる", "低いゴムひもをこえて前転します。"],
+    ["少しずつ遠く・高く", "少しずつ距離と高さを出します。"]],
+  tips: ["手をついたら、ひじを曲げてクッションにする", "お尻を高く上げて、頭の後ろからつく", "手をつく場所に目印を置く"],
+  coach: ["「ジャンプ、ふんわり、くるん」と声をかける", "最初は高さより「やわらかく」を目標にする", "ゴムひもは手で持ち、足が引っかかったらすぐはなす"],
+  trouble: [["頭から突っこむ", "ひじのクッションがありません。高さを下げてもどります。"], ["お尻が落ちる", "ふみ切りが弱いです。助走のリズムを練習します。"]],
+  safety: ["首を痛めやすい。高さを急に上げない", "こえる物はやわらかい物だけにする"],
+  videos: [["JDWeSHaDV0A", "【マット運動】とび前転のコツと練習の仕方"]] },
+
+{ id: "kaikyakuKouten", name: "開脚後転", kana: "かいきゃくこうてん", lane: 1, row: 3, stars: 3, grade: "3〜4年", pre: ["kouten"],
+  desc: "後転の途中、足がマットにつく前に大きく開いて、開脚で立ちます。",
+  goal: "ひざをのばして、足を開いて立てる。",
+  steps: [
+    ["後転の確認", "後転がまっすぐできるか確認します。"],
+    ["開いてつく", "ゆりかごから、足を開いて頭の先のマットにつけます。"],
+    ["坂道マットで", "坂道マットで後転し、足を開いてつきます。"],
+    ["押して起きる", "手で強く押して、上体を起こします。"],
+    ["平らなマットで", "平らなマットで、ひとりで立ちます。"]],
+  tips: ["ひざをのばしたまま後ろに倒れる（最初はすわった姿勢からでよい）", "足を開くのは、足がマットにつく直前", "手で押して頭をぬき、胸を起こす"],
+  coach: ["「ころん、パッ、ぐっ」と声をかける", "補助は横から腰を持ち上げて、首の負担を減らす", "後転より首が楽に感じる子もいる"],
+  trouble: [["開くのが早くて回れない", "足先が頭の上をこえてから開きます。"], ["立てない", "手の押しが足りません。坂道マットで押す練習をします。"]],
+  safety: ["首が痛いときはすぐやめる", "最初は補助つきで行う"],
+  videos: [["HNV8gY8Cwfk", "開脚後転のやり方！コツや練習方法を解説"], ["Ajh2YznY36c", "開脚後転のやり方のコツが分かる動画 お手本編"]] },
+
+{ id: "hojoTouritsu", name: "補助倒立", kana: "ほじょとうりつ", lane: 3, row: 3, stars: 3, grade: "3〜4年", pre: ["kabe"],
+  desc: "片足ずつけり上げて逆さになり、補助者に足を支えてもらって倒立します。",
+  goal: "補助者に軽く足を持ってもらうだけで、体をまっすぐにして5秒止まれる。",
+  steps: [
+    ["壁倒立の確認", "けり上げの壁倒立ができるか確認します。"],
+    ["足を受け止めてもらう", "補助者が横に立ち、けり上げた足を受け止めます。"],
+    ["足をそろえる", "両足をそろえて、体をまっすぐにします。"],
+    ["5秒止まる", "5秒止まり、足を片方ずつ下ろします。"],
+    ["補助を軽く", "補助者は支える力を少しずつ軽くします。"]],
+  tips: ["けり足と振り上げ足の両方を使う", "手で床を押して、肩を耳に近づける", "目線は手の間"],
+  coach: ["補助者は振り上げ足の側の横に立ち、太ももを持つ（すねではなく）", "補助のうまさで上達が変わる。最初は大人が補助する", "「せーの、トン、ピタ！」と声をかける"],
+  trouble: [["振り上げが弱い", "かえるの足打ちや壁倒立にもどります。"], ["体がそってしまう", "おなかに力を入れて、目線を手の間にします。"]],
+  safety: ["補助者は正面に立たない（足が当たります）", "周りに人がいないか確認する"],
+  videos: [["urY5Pl4OQZw", "小学校体育マット運動の発展技「補助倒立」に挑戦！"], ["0vUNlXbuvho", "倒立の補助のやり方！3つのおすすめ練習"]] },
+
+{ id: "sokuten", name: "側方倒立回転", kana: "そくほうとうりつかいてん", lane: 4, row: 3, stars: 3, grade: "2〜4年", pre: ["kaeru"],
+  desc: "手→手→足→足の順にマットにつき、横向きに回ります。側転ともいいます。",
+  goal: "ひざをのばして、1本の線の上で回れる。",
+  steps: [
+    ["かえるの足打ち", "腕で支えてお尻を高く上げる感覚を確認します。"],
+    ["川とび", "マットの横から両手をつき、足で反対側にとびこします。"],
+    ["手形・足形を置く", "手と足をつく場所に目印を置いて、順番を確かめます。"],
+    ["「く」の字側転", "腰を曲げた低い姿勢で、目印どおりに回ります。"],
+    ["足を大きく振り上げる", "お尻を高くして、足を大きく振り上げます。"],
+    ["線の上で", "両手を上げた姿勢から、1本の線の上で側転します。"]],
+  tips: ["手は「ハ」の字につき、指先は外側", "つく順番は「手・手・足・足」", "目線は手を見る。足は大きく開いてひざをのばす"],
+  coach: ["「トン・トン・トン・トン」とリズムを声に出す", "手形・足形の目印を置く", "補助は背中側に立ち、腰を両手で持って回してあげる"],
+  trouble: [["腰が上がらない（カエルのような形）", "振り上げ足を強くします。川とびを高くします。"], ["曲がって回る", "線や目印を使います。"], ["ひざが曲がる", "つま先をのばすことを意識し、低いゴムひもをこえます。"]],
+  safety: ["手首の準備運動をする", "回る方向に人がいないか確認する"],
+  videos: [["SzKF7tnr2Sg", "できたよ！マット運動【側転のポイント】"], ["goUUrliEJiM", "[幼児向け] 元体操選手が教える側転の教え方"], ["lhhYDH8h9qk", "【側転】コツと段階的な練習方法を徹底解説"]] },
+
+{ id: "kubiHane", name: "首はねおき", kana: "くびはねおき", lane: 5, row: 3, stars: 4, grade: "4〜6年", pre: ["zenten", "bridge"],
+  desc: "前転の途中、首と肩の後ろで体を支えてから、足を斜め上にはね出し、手で押して立ちます。",
+  goal: "腰をそらせて、足から着地して立てる。",
+  steps: [
+    ["ブリッジの確認", "ブリッジで5秒止まれるか確認します。"],
+    ["はね出しの練習", "あおむけで足を頭のほうへ持っていき、そこから足を斜め上にはね出します。"],
+    ["段差から", "重ねたマットの端から、はね出して着地します。補助つき。"],
+    ["補助つき平らなマットで", "補助者に背中を支えてもらい、平らなマットで行います。"],
+    ["ひとりで", "ひとりで、足から着地して立ちます。"]],
+  tips: ["はねるのは、腰が頭をこえたとき", "足は真上ではなく、斜め前上へ", "手で強くマットを押して、胸を開く"],
+  coach: ["補助は横から腰を下から支えて持ち上げる", "「ため…ポーン！」と声をかける", "段差を使うと早く成功体験ができる"],
+  trouble: [["お尻から落ちる", "はねるのが早いか、方向が上すぎます。"], ["立てない", "そりと手の押しが足りません。ブリッジの押しを練習します。"]],
+  safety: ["首をつく技なので、段差と補助つきから始める", "首の準備運動をしっかり行う"],
+  videos: [["iyR3EnuOjjE", "【マット】実は簡単！首はね起きのコツ（ネックスプリング）"], ["jdJAwTBoGsg", "首跳ね起き（ネックスプリング）のやり方 お手本編"]] },
+
+{ id: "Yji", name: "Y字バランス", kana: "ワイじバランス", lane: 6, row: 3, stars: 3, grade: "3〜6年", pre: ["suihei"],
+  desc: "片足で立ち、もう片方の足を手で持って、横に高く上げて止まります。",
+  goal: "軸足と上げた足をのばしたまま、3秒止まれる。",
+  steps: [
+    ["開脚ストレッチ", "おふろ上がりなどに、毎日少しずつ開脚ストレッチをします。"],
+    ["ひざをかかえる", "片足立ちで、上げる足のひざをかかえます。"],
+    ["横に開く", "かかとを手で持ち、ひざを曲げたまま横に開きます。"],
+    ["ひざをのばす", "壁につかまって、少しずつひざをのばします。"],
+    ["手をはなして3秒", "壁から手をはなして3秒止まります。"]],
+  tips: ["軸足のひざをまっすぐ。足の裏・ひざ・股関節を一直線に", "上体をまっすぐ立てて、横に倒さない", "上げる足のつま先までのばす"],
+  coach: ["ストレッチは痛くないところまで", "最初は壁を使ってよい", "体のやわらかさは個人差が大きいので、他の子と比べない"],
+  trouble: [["軸足が曲がる", "上げる足を低くして、軸足をまっすぐにするのを優先します。"], ["体がかたむく", "上げる足と反対の手を横に広げます。"]],
+  safety: ["反動をつけて無理に開かない", "体が温まってから行う"],
+  videos: [["DJREGAoPNsw", "おうちで挑戦！バランス感覚を育てる体操ポーズ紹介【水平＆Y字】"], ["K7xK1tX6crM", "Y字バランスのポイントと練習方法"]] },
+
+{ id: "shinshitsuZenten", name: "伸膝前転", kana: "しんしつぜんてん", lane: 0, row: 4, stars: 5, grade: "5〜6年", pre: ["kaikyakuZenten"],
+  desc: "ひざをのばしたまま前転し、足を閉じたまま立ち上がります。小学校でいちばん難しい回転技の1つです。",
+  goal: "ひざをのばしたまま回り、足を閉じたまま立ち上がれる。",
+  steps: [
+    ["前屈ストレッチ", "長座体前屈で、ひざをのばしたままおでこをひざに近づけます。"],
+    ["開脚前転をせまく", "開脚前転の足の開きを、少しずつせまくします。"],
+    ["段差を使う", "重ねたマットの上から下に向かって、伸膝前転をします。"],
+    ["補助つき", "立ち上がるときに、補助者に腰を持ち上げてもらいます。"],
+    ["平らなマットで", "平らなマットで、ひとりで立ち上がります。"]],
+  tips: ["回り始めから最後まで、ひざをのばす", "足がつく直前に、上体を深く前に倒す（前屈）", "手は太ももの横（足の近く）について強く押す"],
+  coach: ["補助は後ろに立ち、立ち上がるときに腰を持ち上げる", "前屈ストレッチを毎回の準備運動にする", "「くるん、ぺたん、ぐっ！」と声をかける"],
+  trouble: [["立てない", "前屈と手の押しが足りません。段差を使います。"], ["ひざが曲がる", "かかとから着地することを意識します。"]],
+  safety: ["無理な前屈で腰を痛めない", "首まわりの準備運動をする"],
+  videos: [["yBZdM-p3mkA", "マット運動の伸膝前転！元体操選手がやり方やコツ、練習方法を解説"], ["gAv3Lkn9ue8", "伸膝前転のやり方のコツが分かる動画 解説編"]] },
+
+{ id: "shinshitsuKouten", name: "伸膝後転", kana: "しんしつこうてん", lane: 1, row: 4, stars: 4, grade: "5〜6年", pre: ["kaikyakuKouten"],
+  desc: "ひざをのばしたまま後ろに回り、ひざをのばしたまま立ちます。",
+  goal: "ひざをのばして回り、足を閉じて立てる。",
+  steps: [
+    ["前屈ストレッチ", "長座体前屈で、ももの裏をのばします。"],
+    ["ドスンとならないすわり方", "立った姿勢から深く前屈し、手を後ろについてお尻をそっと下ろします。"],
+    ["足をのばしたゆりかご", "ひざをのばしたまま、ゆりかごをします。"],
+    ["坂道マットで", "坂道マットで伸膝後転をします。補助つき。"],
+    ["押し切って立つ", "最後は腕で押し切って立ちます。"],
+    ["平らなマットで", "平らなマットで、ひとりで行います。"]],
+  tips: ["立った姿勢から深く前屈し、手を後ろについてお尻を下ろす", "ひざをのばしたまま、つま先を頭の先へ", "最後は腕で押し切る"],
+  coach: ["補助は横から腰を持ち上げる", "前屈が深いほど、お尻がドスンとならない", "坂道マットで成功体験をつくる"],
+  trouble: [["お尻からドスンと落ちる", "前屈が浅いです。手を後ろについてから下ろします。"], ["立てない", "手の押しが足りません。"]],
+  safety: ["首が痛いときはすぐやめる", "最初は補助つきで行う"],
+  videos: [["lU1RbFdK344", "マットの伸膝後転のやり方・コツ（学校の授業で使えるフリー動画）"], ["XdL-cdUFp9k", "【伸膝後転】スムーズな立ち上がりの4つのポイント"]] },
+
+{ id: "touritsuZenten", name: "倒立前転", kana: "とうりつぜんてん", lane: 3, row: 4, stars: 4, grade: "5〜6年", pre: ["hojoTouritsu", "zenten"],
+  desc: "倒立の姿勢から、ひじを曲げてあごを引き、前転につなげます。",
+  goal: "倒立で一瞬止まってから、ゆっくりひじを曲げて前転し、立ち上がれる。",
+  steps: [
+    ["補助倒立で5秒", "補助倒立で5秒止まれるか確認します。"],
+    ["壁倒立から前転", "壁ぎわにマットを敷き、壁倒立からあごを引いて前転で降ります。"],
+    ["補助倒立から前転", "補助者に足を持ってもらったまま、ひじを曲げて頭の後ろをつき、前転します。"],
+    ["補助を軽く", "補助者は支えを少しずつ軽くします。"],
+    ["ひとりで", "ひとりで、倒立から前転して立ちます。"]],
+  tips: ["倒立で一度止まってから回る", "あごを引いて、おへそを見る（頭の後ろをつく）", "ひじはゆっくり曲げてクッションにする"],
+  coach: ["補助者は足を持ち、ゆっくり前に倒すように下ろす", "「ピタ、あご引いて、くるん」と声をかける"],
+  trouble: [["背中から落ちる", "倒れすぎてから回っています。早めにあごを引きます。"], ["頭のてっぺんをつく", "あごを引いておへそを見ます。"]],
+  safety: ["首を痛めやすい。補助つきの練習を十分にする", "前にマットを広く敷く"],
+  videos: [["7Ps8Zx_BT9g", "マットの倒立前転のやり方・コツ（学校の授業で使えるフリー動画）"]] },
+
+{ id: "touritsuBridge", name: "倒立ブリッジ", kana: "とうりつブリッジ", lane: 5, row: 4, stars: 4, grade: "4〜6年", pre: ["hojoTouritsu", "bridge"],
+  desc: "倒立から足を前に倒して、ブリッジで着地します。最初は補助つき（補助倒立ブリッジ）から。ハンドスプリングの土台です。",
+  goal: "補助つきで、倒立からブリッジに降りて止まれる。できればブリッジから立ち上がる。",
+  steps: [
+    ["ブリッジと補助倒立", "ブリッジで5秒、補助倒立で5秒止まれるか確認します。"],
+    ["壁を歩いて降りる", "壁倒立から、壁を背にして足で壁を歩いて降り、ブリッジになります。"],
+    ["補助倒立ブリッジ", "補助倒立から、補助者に背中を支えてもらいながら、ゆっくりブリッジに降ります。"],
+    ["補助を軽く", "補助者は支えを少しずつ軽くします。"],
+    ["ひとりで", "ひとりで倒立ブリッジをします。"],
+    ["立ち上がる", "ブリッジから、手で押して立ち上がります。"]],
+  tips: ["肩を後ろに倒さず、手の上に残す", "目線は手からはなさない（頭を起こさない）", "足先を遠くにつく"],
+  coach: ["補助は横に立ち、片手で背中（腰）、片手で太ももを支える", "2人で両側から支える方法もある", "友だちと支え合うと楽しく練習できる"],
+  trouble: [["ドスンと落ちる", "肩が後ろに倒れています。目線を手に残します。"], ["足が届かない", "ブリッジの練習で肩と胸をやわらかくします。"]],
+  safety: ["腰が痛いときはすぐやめる", "補助つきから始める"],
+  videos: [["IVTuQdYWjuo", "小学校体育マット運動の基本的な技「補助倒立ブリッジ」"], ["I50CnG8Qhac", "小学校体育マット運動の発展技「倒立ブリッジ」に挑戦！"]] },
+
+{ id: "koutenTouritsu", name: "後転倒立", kana: "こうてんとうりつ", lane: 1, row: 5, stars: 5, grade: "5〜6年", pre: ["shinshitsuKouten", "hojoTouritsu"],
+  desc: "後転の途中で腕をのばして押し上げ、倒立の姿勢になります。",
+  goal: "後転から、ひじをのばして足を真上にのばし、一瞬止まれる。",
+  steps: [
+    ["土台の確認", "伸膝後転と補助倒立ができるか確認します。"],
+    ["足を真上に", "あおむけで、肩で支えて足を真上に上げます（首倒立）。"],
+    ["押すタイミング", "後転で足が真上に来たときに、手で押す練習をします。補助つき。"],
+    ["引き上げてもらう", "補助者に足を持ってもらい、倒立まで引き上げてもらいます。"],
+    ["ひとりで", "ひとりで押し上げて、倒立の姿勢になります。"]],
+  tips: ["足が真上に来たタイミングで一気に押す", "押すと同時に腰をのばし、足を天井へ", "手は肩の近く、ひじをしめる"],
+  coach: ["補助は横に立ち、すねを持って上に引き上げる", "「ころん、ぐーっ、ピーン」と声をかける"],
+  trouble: [["足がななめに出る", "押すタイミングが遅いです。"], ["押し上がらない", "腕の力が足りません。腕立てで支える練習をします。"]],
+  safety: ["首の負担が大きい。必ず補助つきから始める"],
+  videos: [["7hvohxY0P-w", "マットの後転倒立のやり方・コツ（学校の授業で使えるフリー動画）"]] },
+
+{ id: "ronda", name: "ロンダート", kana: "ロンダート", lane: 4, row: 5, stars: 4, grade: "4〜6年", pre: ["sokuten"],
+  desc: "側転の後半で体をひねり、両足をそろえて、スタートした方向を向いて着地します。",
+  goal: "側転のように回り、両足をそろえて後ろ向きに着地できる。",
+  steps: [
+    ["きれいな側転", "線の上で、ひざをのばした側転ができるか確認します。"],
+    ["ホップ側転", "片足でホップしてから側転します。"],
+    ["倒立で足をそろえる", "側転の途中、逆さのところで両足をそろえます。"],
+    ["手の向きを変える", "2本目の手を、1本目に対して横向き（90度）につきます。"],
+    ["突き放して着地", "手で突き放し、両足をそろえて着地します。"],
+    ["助走をつけて", "2〜3歩の助走から行います。"]],
+  tips: ["1本目と2本目の手でひねる", "逆さのところで両足を閉じる", "手で突き放して、胸を起こして着地する"],
+  coach: ["補助は側転と同じく、腰を支える", "着地の向き（スタートの方向を向く）を先に教える"],
+  trouble: [["着地が横向きになる", "ひねりが足りません。2本目の手の向きを確認します。"], ["足がそろわない", "逆さのところで足を閉じることを意識します。"]],
+  safety: ["着地でひざや腰を痛めないよう、ひざを軽く曲げる", "周りに人がいないか確認する"],
+  videos: [["obxuBlc-NoA", "【ロンダート講座】体操選手が丁寧にやり方・練習方法を教えます"], ["42dnk33YIF8", "ロンダートのやり方・練習方法｜初心者向け"]] },
+
+{ id: "atamaHane", name: "頭はねおき", kana: "あたまはねおき", lane: 5, row: 5, stars: 5, grade: "5〜6年", pre: ["kubiHane", "atama"],
+  desc: "頭と手で体を支える姿勢から、足を斜め前にはね出し、手で押して立ちます。ヘッドスプリングともいいます。",
+  goal: "補助なしで、はねて足から着地して立てる。",
+  steps: [
+    ["土台の確認", "頭倒立と首はねおきができるか確認します。"],
+    ["「く」の字で止まる", "頭と手をつき、腰を曲げた「く」の字の姿勢で止まります。"],
+    ["段差から", "重ねたマットの上から、はね出して着地します。補助つき。"],
+    ["補助つき平らなマットで", "補助者に背中を支えてもらい、平らなマットで行います。"],
+    ["ひとりで", "ひとりで、足から着地して立ちます。"]],
+  tips: ["腰が頭をこえて倒れ始めた瞬間にはねる", "足は斜め前上へ", "はねると同時に手で強く押す"],
+  coach: ["補助は横から背中を支え、着地まで持ち上げる", "段差を使うと早く成功体験ができる"],
+  trouble: [["お尻から落ちる", "はねるタイミングが早いです。"], ["立てない", "手の押しと体のそりが足りません。"]],
+  safety: ["首をつく技なので、補助つきで行う", "首の準備運動をしっかり行う"],
+  videos: [["gBecarYFpyA", "【マット】これでできる！頭はね起きのコツ（ヘッドスプリング）"], ["MYKXLeQJlQk", "頭はね起きができない人へ｜5ステップ練習法"]] },
+
+{ id: "handspring", name: "ハンドスプリング", kana: "ぜんぽうとうりつかいてん", lane: 5, row: 6, stars: 5, grade: "6年〜", pre: ["touritsuBridge", "atamaHane"],
+  desc: "助走から倒立を通り、ブリッジのようにそって足から着地して立ちます。前方倒立回転ともいいます。小学生の発展技です。",
+  goal: "補助なしで、倒立からそって足から着地し、立ち上がれる。",
+  steps: [
+    ["土台の確認", "倒立ブリッジと、ブリッジからの立ち上がりができるか確認します。"],
+    ["重ねたマットの上で", "高く重ねたマットに背中を乗せるように、倒立から回ります。"],
+    ["段差から補助つきで", "段差を使い、補助者2人に支えてもらって回ります。"],
+    ["ホップから", "2〜3歩の助走とホップから行います。補助つき。"],
+    ["ひとりで", "平らなマットで、ひとりで立ち上がります。"]],
+  tips: ["手をついたら肩を前に出さず、突き放す", "目線は手を見続ける（頭を早く起こさない）", "体をそらせて、足を遠くにつく"],
+  coach: ["補助は両側から2人で、肩と背中を支える", "体操教室や指導者のもとで練習する技"],
+  trouble: [["お尻から落ちる", "突き放しが足りません。段差にもどります。"], ["頭が早く起きる", "目線を手に残します。"]],
+  safety: ["指導者の補助が必要な技。家ではひとりで行わない"],
+  videos: [["6ITodZBIRaY", "前転とび（ハンドスプリング）講座 ～段階練習～"], ["PLURe3koaFA", "転回（ハンドスプリング）の練習方法やコツ"]] }
+];
+
+const BY_ID = Object.fromEntries(SKILLS.map(s => [s.id, s]));
+SKILLS.forEach(s => s.next = []);
+SKILLS.forEach(s => s.pre.forEach(p => BY_ID[p].next.push(s.id)));
+
+// ===== 動画の表示方法 =====
+// claude.ai ではYouTubeを埋め込めないのでリンクにする。普通のWebサイト（GitHub Pagesなど）では埋め込む。
+const CAN_EMBED = /github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) || window.EMBED_VIDEOS === true;
+
+// ===== 記録の保存 =====
+const LS_KEY = "mat-skill-tree-v1";
+let progress = { skills: {}, steps: {} };
+let cloudRef = null, saveTimer = null, saving = false, pendingSave = false;
+
+function loadLocal() {
+  try { const raw = localStorage.getItem(LS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+  return null;
+}
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(progress)); } catch (e) {} }
+function normalize(p) { return { skills: Object.assign({}, p && p.skills), steps: Object.assign({}, p && p.steps) }; }
+
+async function writeCloud() {
+  if (!cloudRef) return;
+  if (saving) { pendingSave = true; return; }
+  saving = true;
+  try { await cloudRef.set(JSON.parse(JSON.stringify(progress))); setSync("記録を保存しました"); }
+  catch (e) { setSync("保存できませんでした。この端末には残っています"); }
+  saving = false;
+  if (pendingSave) { pendingSave = false; writeCloud(); }
+}
+function save() {
+  saveLocal();
+  if (cloudRef) { clearTimeout(saveTimer); saveTimer = setTimeout(writeCloud, 700); }
+}
+function setSync(t) { document.getElementById("syncNote").textContent = t; }
+
+async function initCloud() {
+  if (!window.claude || !window.claude.use) return;
+  try {
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    if (!db || !user) return;
+    const uid = await user.id();
+    if (!uid) return;
+    cloudRef = db.doc("data/users/" + uid + "/progress");
+    const snap = await cloudRef.get();
+    if (snap.exists) {
+      progress = normalize(snap.data());
+      saveLocal();
+      renderAll();
+    } else if (Object.keys(progress.skills).length) {
+      writeCloud();
+    }
+    document.getElementById("saveNote").textContent = "記録はclaude.aiのアカウントに保存されるので、スマホでもパソコンでも同じ記録が見られます。";
+  } catch (e) { cloudRef = null; }
+}
+
+// ===== 状態 =====
+const stateOf = id => progress.skills[id] || 0;   // 0 まだ / 1 練習中 / 2 できた
+function statusOf(s) {
+  const v = stateOf(s.id);
+  if (v === 2) return "done";
+  if (v === 1) return "practice";
+  return s.pre.every(p => stateOf(p) === 2) ? "next" : "locked";
+}
+const STATUS_LABEL = { done: "できた", practice: "練習中", next: "挑戦できる", locked: "前の技が先" };
+const starsHTML = n => '<span class="stars" aria-label="難しさ' + n + '">' + "★".repeat(n) + '<span class="off">' + "★".repeat(5 - n) + "</span></span>";
+const ruby = s => s.kana && s.kana !== s.name ? "<ruby>" + s.name + "<rt>" + s.kana + "</rt></ruby>" : s.name;
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ===== ツリー =====
+const COL_W = 128, ROW_H = 104, NODE_W = 112, NODE_H = 60, TOP = 34, LEFT = 26;
+function renderTree() {
+  const el = document.getElementById("tree");
+  const w = LEFT + LANES.length * COL_W, h = TOP + ROWS.length * ROW_H;
+  el.style.width = w + "px"; el.style.height = h + "px";
+  const pos = s => ({ x: LEFT + s.lane * COL_W + (COL_W - NODE_W) / 2, y: TOP + s.row * ROW_H + (ROW_H - NODE_H) / 2 });
+  let paths = "";
+  SKILLS.forEach(s => s.pre.forEach(pid => {
+    const a = pos(BY_ID[pid]), b = pos(s);
+    const x1 = a.x + NODE_W / 2, y1 = a.y + NODE_H, x2 = b.x + NODE_W / 2, y2 = b.y;
+    const my = (y1 + y2) / 2;
+    const on = stateOf(pid) === 2 ? " on" : "";
+    paths += '<path class="edge' + on + '" d="M' + x1 + " " + y1 + " C" + x1 + " " + my + " " + x2 + " " + my + " " + x2 + " " + y2 + '"/>';
+  }));
+  let html = '<svg width="' + w + '" height="' + h + '" aria-hidden="true">' + paths + "</svg>";
+  LANES.forEach((l, i) => { html += '<div class="lane-head" style="left:' + (LEFT + i * COL_W) + "px;width:" + COL_W + 'px">' + l + "</div>"; });
+  ROWS.forEach((r, i) => { html += '<div class="row-head" style="top:' + (TOP + i * ROW_H + 18) + 'px">' + r + "</div>"; });
+  SKILLS.forEach(s => {
+    const p = pos(s), st = statusOf(s);
+    const badge = st === "done" ? '<span class="badge">できた</span>' : st === "practice" ? '<span class="badge">練習中</span>' : "";
+    html += '<button class="node ' + st + '" style="left:' + p.x + "px;top:" + p.y + 'px" data-id="' + s.id + '" aria-label="' + esc(s.name + "　" + STATUS_LABEL[st]) + '">' +
+      badge + '<span class="nm">' + s.name + '</span><span class="st">' + "★".repeat(s.stars) + "　" + s.grade + "</span></button>";
+  });
+  el.innerHTML = html;
+}
+
+// ===== 難易度順リスト =====
+function renderList() {
+  const el = document.getElementById("list");
+  const order = SKILLS.slice().sort((a, b) => a.stars - b.stars || a.row - b.row || a.lane - b.lane);
+  let html = "", cur = 0;
+  const groupName = { 1: "幼児から", 2: "低学年", 3: "中学年", 4: "高学年", 5: "高学年の発展技" };
+  order.forEach(s => {
+    if (s.stars !== cur) {
+      cur = s.stars;
+      const n = order.filter(x => x.stars === cur);
+      const d = n.filter(x => stateOf(x.id) === 2).length;
+      html += '<h2 class="group-title">' + starsHTML(cur) + " " + groupName[cur] + "<small>" + d + "/" + n.length + " できた</small></h2>";
+    }
+    const st = statusOf(s);
+    const pre = s.pre.length ? "前の技：" + s.pre.map(p => BY_ID[p].name).join("・") : "最初の技";
+    html += '<button class="row" data-id="' + s.id + '"><span class="nm">' + ruby(s) + '</span><span class="chip ' + st + '">' + STATUS_LABEL[st] + '</span><span class="sub">' + s.grade + "　" + LANES[s.lane] + "　" + pre + "</span></button>";
+  });
+  el.innerHTML = html;
+}
+
+function renderMeter() {
+  const d = SKILLS.filter(s => stateOf(s.id) === 2).length;
+  document.getElementById("meterNum").textContent = d + "/" + SKILLS.length;
+  document.getElementById("meterBar").style.width = (d / SKILLS.length * 100) + "%";
+}
+function renderAll() { renderTree(); renderList(); renderMeter(); if (openId) renderSheet(openId); }
+
+// ===== 詳細シート =====
+let openId = null;
+const sheet = document.getElementById("sheet");
+function videoHTML(s) {
+  if (!s.videos.length) return "";
+  let html = "";
+  if (CAN_EMBED) {
+    const v = s.videos[0];
+    html += '<div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/' + v[0] + '?rel=0" title="' + esc(v[1]) + '" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
+  }
+  html += '<div class="vids">' + s.videos.map((v, i) =>
+    '<a class="vid" href="https://www.youtube.com/watch?v=' + v[0] + '" target="_blank" rel="noopener"><span class="play" aria-hidden="true"></span><span class="t">' + esc(v[1]) +
+    "<small>" + (CAN_EMBED && i === 0 ? "YouTubeで開く" : "YouTubeで見る") + "</small></span></a>").join("") + "</div>";
+  return html;
+}
+function renderSheet(id) {
+  const s = BY_ID[id], v = stateOf(id), st = statusOf(s);
+  const stepState = progress.steps[id] || [];
+  const preLinks = s.pre.map(p => '<button data-go="' + p + '" class="' + (stateOf(p) === 2 ? "done" : "") + '">' + BY_ID[p].name + "</button>").join("");
+  const nextLinks = s.next.map(n => '<button data-go="' + n + '" class="' + (stateOf(n) === 2 ? "done" : "") + '">' + BY_ID[n].name + "</button>").join("");
+  const lockedNote = st === "locked" ? '<p style="margin:6px 0 0;color:var(--muted);font-size:14px">先に「' + s.pre.filter(p => stateOf(p) !== 2).map(p => BY_ID[p].name).join("」「") + "」ができるようになると、この技が楽になります。</p>" : "";
+  document.getElementById("sheetBody").innerHTML =
+    '<div class="sheet-bar"><span class="chip ' + st + '">' + STATUS_LABEL[st] + '</span><button class="close" id="closeBtn">とじる</button></div>' +
+    '<div class="d-head"><h2 id="dTitle">' + ruby(s) + '</h2><div class="meta">' + starsHTML(s.stars) + "<span>目安：" + s.grade + "</span><span>" + LANES[s.lane] + '</span></div><p class="desc">' + s.desc + "</p>" + lockedNote + "</div>" +
+    '<div class="state-pick" role="group" aria-label="記録">' + [["0", "まだ"], ["1", "練習中"], ["2", "できた！"]].map(([k, l]) => '<button data-v="' + k + '" aria-pressed="' + (String(v) === k) + '">' + l + "</button>").join("") + "</div>" +
+    '<div class="goal"><b>「できた」の目安</b><br>' + s.goal + "</div>" +
+    '<div class="d-sec"><h3>お手本動画</h3>' + videoHTML(s) + "</div>" +
+    '<div class="d-sec"><h3>スモールステップ</h3><ol class="steps">' + s.steps.map((t, i) =>
+      '<li class="' + (stepState[i] ? "ok" : "") + '"><label><input type="checkbox" id="step-' + id + "-" + i + '" data-step="' + i + '"' + (stepState[i] ? " checked" : "") + '><span class="stxt"><b>' + t[0] + "</b><br>" + t[1] + "</span></label></li>").join("") + "</ol></div>" +
+    '<div class="two"><div class="d-sec"><h3>コツ</h3><ul>' + s.tips.map(t => "<li>" + t + "</li>").join("") + '</ul></div><div class="d-sec"><h3>教え方・補助</h3><ul>' + s.coach.map(t => "<li>" + t + "</li>").join("") + "</ul></div></div>" +
+    '<div class="d-sec"><h3>うまくいかないとき</h3><div class="trouble">' + s.trouble.map(t => "<div><b>" + t[0] + "</b>" + t[1] + "</div>").join("") + "</div></div>" +
+    '<div class="safety-box"><h3>安全のために</h3><ul>' + s.safety.map(t => "<li>" + t + "</li>").join("") + "</ul></div>" +
+    '<div class="d-sec"><h3>つながる技</h3><div class="links"><span class="lbl">前の技</span>' + (preLinks || '<span class="lbl">なし（最初の技）</span>') + '</div><div class="links" style="margin-top:8px"><span class="lbl">次の技</span>' + (nextLinks || '<span class="lbl">ここがゴール</span>') + "</div></div>";
+}
+function openSkill(id) {
+  if (!BY_ID[id]) return;
+  openId = id; renderSheet(id);
+  if (!sheet.open) sheet.showModal();
+  sheet.scrollTop = 0;
+  try { history.replaceState(null, "", "#" + id); } catch (e) {}
+}
+function closeSheet() { sheet.close(); }
+sheet.addEventListener("close", () => { openId = null; try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} });
+sheet.addEventListener("click", e => {
+  if (e.target === sheet) return closeSheet();
+  if (e.target.closest("#closeBtn")) return closeSheet();
+  const go = e.target.closest("[data-go]"); if (go) return openSkill(go.dataset.go);
+  const pick = e.target.closest(".state-pick button");
+  if (pick) { progress.skills[openId] = Number(pick.dataset.v); if (!progress.skills[openId]) delete progress.skills[openId]; save(); renderAll(); }
+});
+sheet.addEventListener("change", e => {
+  const cb = e.target.closest("[data-step]"); if (!cb) return;
+  const arr = (progress.steps[openId] || []).slice();
+  arr[Number(cb.dataset.step)] = cb.checked;
+  progress.steps[openId] = arr;
+  if (cb.checked && stateOf(openId) === 0) progress.skills[openId] = 1;
+  save(); renderAll();
+});
+
+document.getElementById("tree").addEventListener("click", e => { const b = e.target.closest("[data-id]"); if (b) openSkill(b.dataset.id); });
+document.getElementById("list").addEventListener("click", e => { const b = e.target.closest("[data-id]"); if (b) openSkill(b.dataset.id); });
+
+// ===== タブ =====
+document.querySelector(".tabs").addEventListener("click", e => {
+  const b = e.target.closest("[data-view]"); if (!b) return;
+  document.querySelectorAll(".tabs button").forEach(t => t.setAttribute("aria-selected", t === b));
+  ["tree", "list", "guide"].forEach(v => document.getElementById("view-" + v).hidden = v !== b.dataset.view);
+  try { localStorage.setItem(LS_KEY + "-tab", b.dataset.view); } catch (e) {}
+});
+
+// ===== 起動 =====
+progress = normalize(loadLocal());
+if (CAN_EMBED) document.getElementById("videoNote").textContent = "各技のページで、1本目の動画をその場で再生できます。";
+renderAll();
+try { const t = localStorage.getItem(LS_KEY + "-tab"); if (t) document.querySelector('[data-view="' + t + '"]').click(); } catch (e) {}
+if (location.hash && BY_ID[location.hash.slice(1)]) openSkill(location.hash.slice(1));
+initCloud();
+</script>
+
+</body>
+</html>
